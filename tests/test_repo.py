@@ -4,7 +4,9 @@ import os
 import pandas as pd
 import pytest
 from datetime import datetime, timedelta
-from src.repo_miner import fetch_commits, fetch_issues, merge_and_summarize
+from src.repo_miner import fetch_commits#, fetch_issues, merge_and_summarize
+import vcr
+from github import Github
 
 # --- Helpers for dummy GitHub API objects ---
 
@@ -67,7 +69,7 @@ def patch_env_and_github(monkeypatch):
     # Set fake token
     monkeypatch.setenv("GITHUB_TOKEN", "fake-token")
     # Patch Github class
-    # TODO
+    monkeypatch.setattr("src.repo_miner.Github",lambda token: gh_instance)
 
 # Helper global placeholder
 gh_instance = DummyGithub("fake-token")
@@ -85,13 +87,28 @@ def test_fetch_commits_basic(monkeypatch):
     df = fetch_commits("any/repo")
     assert list(df.columns) == ["sha", "author", "email", "date", "message"]
     assert len(df) == 2
-    assert df.iloc[0]["message"] == "Initial commit"
+    assert df.iloc[0]["message"] == "Initial commit\nDetails"
 
 def test_fetch_commits_limit(monkeypatch):
     # More commits than max_commits
-    # TODO： Test that fetch_commits respects the max_commits limit.
-    return
+    now = datetime.now()
+    commits = [
+        DummyCommit("sha1", "Alice", "a@example.com", now, "Initial commit\nDetails"),
+        DummyCommit("sha2", "Bob", "b@example.com", now - timedelta(days=1), "Bug fix"),
+        DummyCommit("sha3", "Alice", "a@example.com", now - timedelta(days=2), "Another bug fix"),
+    ]
+    gh_instance._repo = DummyRepo(commits,[])
+    df = fetch_commits("any/repo")
+    assert len(df) == 3
+    df = fetch_commits("any/repo",2)
+    assert len(df) == 2
+    df = fetch_commits("any/repo",0)
+    assert len(df) == 0
+
 
 def test_fetch_commits_empty(monkeypatch):
     # TODO: Test that fetch_commits returns empty DataFrame when no commits exist.
-    return
+    commits = []
+    gh_instance._repo = DummyRepo(commits,[])
+    df = fetch_commits("any/repo")
+    assert len(df) == 0

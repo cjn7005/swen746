@@ -30,15 +30,15 @@ def fetch_commits(repo_name: str, max_commits: int = None) -> pd.DataFrame:
     commits = repo.get_commits()
 
     # 4) Normalize each commit into a record dict
-    record = [{}]
+    record = []
     for i,commit in enumerate(commits):
       if max_commits is not None and i >= max_commits: break
       commit_record = {
         'sha': commit.sha,
-        'message': commit.commit.message,
-        'author_name': commit.commit.author.name,
-        'author_email': commit.commit.author.email,
-        'date': commit.commit.committer.date.isoformat()
+        'author': commit.commit.author.name,
+        'email': commit.commit.author.email,
+        'date': commit.commit.author.date.isoformat(),
+        'message': commit.commit.message
       }
       record.append(commit_record)
 
