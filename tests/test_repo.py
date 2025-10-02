@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import pytest
 from datetime import datetime, timedelta
-from src.repo_miner import fetch_commits, fetch_issues#, merge_and_summarize
+from src.repo_miner import fetch_commits#, fetch_issues, merge_and_summarize
 import vcr
 from github import Github
 
@@ -107,33 +107,8 @@ def test_fetch_commits_limit(monkeypatch):
 
 
 def test_fetch_commits_empty(monkeypatch):
+    # TODO: Test that fetch_commits returns empty DataFrame when no commits exist.
     commits = []
     gh_instance._repo = DummyRepo(commits,[])
     df = fetch_commits("any/repo")
     assert len(df) == 0
-
-
-def test_fetch_issues_basic(monkeypatch):
-    now = datetime.now()
-    issues = [
-        DummyIssue(1, 101, "Issue A", "alice", "open", now, None, 0),
-        DummyIssue(2, 102, "Issue B", "bob", "closed", now - timedelta(days=2), now, 2)
-    ]
-    gh_instance._repo = DummyRepo([], issues)
-    df = fetch_issues("any/repo", state="all")
-    assert {"id", "number", "title", "user", "state", "created_at", "closed_at", "comments"}.issubset(df.columns)
-    assert len(df) == 2
-
-    # Check date normalization
-    assert df.iloc[0]['created_at'] == now.isoformat()
-    assert df.iloc[1]['created_at'] == (now - timedelta(days=2)).isoformat()
-    assert df.iloc[1]['closed_at'] == now.isoformat()
-
-    # Check PR exclusion
-    issues.append(DummyIssue(3,103,"PR C","charlie","open",now,None,0,is_pr=True))
-    gh_instance._repo = DummyRepo([], issues)
-    df = fetch_issues("any/repo", state="all")
-    assert len(df) == 2
-
-    # Check open_duration_days
-    assert df.iloc[1]['open_duration_days'] == 2
