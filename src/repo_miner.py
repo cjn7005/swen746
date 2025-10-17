@@ -136,14 +136,15 @@ def merge_and_summarize(commits_df: pd.DataFrame, issues_df: pd.DataFrame) -> No
     message += 'Top 5 committers: \n'
     if len(result['authors']) > 0:
       for i,author in enumerate(result['authors']):
-          message += f'  {i+1}) {author}: {sums[author]} '\
-            f'commit{"s" if sums[author] > 1 else ""}\n'
+          sm = sums[author]
+          message += f'  {i+1}) {author}: {sm} '\
+            f'commit{"s" if sm > 1 else ""}\n'
     else:
         message += 'None'
     # Print the close rate
-    message += f'Issue close rate: {round(result['rate'],2)}\n'
+    message += f'Issue close rate: {round(result["rate"],2)}\n'
     # Print the average duration
-    message += f'Avg. issue open duration: {result['duration']} Days'
+    message += f'Avg. issue open duration: {result["duration"]} Days'
 
     print(message)
 
