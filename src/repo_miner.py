@@ -137,7 +137,7 @@ def merge_and_summarize(commits_df: pd.DataFrame, issues_df: pd.DataFrame) -> No
     if len(result['authors']) > 0:
       for i,author in enumerate(result['authors']):
           message += f'  {i+1}) {author}: {sums[author]} '\
-            f'commit{'s' if sums[author] > 1 else ''}\n'
+            f'commit{"s" if sums[author] > 1 else ""}\n'
     else:
         message += 'None'
     # Print the close rate
